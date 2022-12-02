@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import {
+  AccountForm,
   Home,
   Posts,
-  AccountForm,
-  PostsCreate,
-  PostMessage,
-  Inbox,
+  PostCreateForm,
+  PostDetail,
 } from "./components";
 import { Route, Switch, Link, useHistory } from "react-router-dom";
-import { fetchPosts, fetchGuest } from "./api/api";
+import { fetchPosts, fetchUsername } from "./api/api";
+import "./App.css";
 
 const App = () => {
   const [posts, setPosts] = useState([]);
@@ -19,28 +19,27 @@ const App = () => {
 
   const history = useHistory();
 
-  useEffect(() => {
-    const getPosts = async () => {
-      const { error, posts } = await fetchPosts(token);
+  const getPosts = async () => {
+    const { error, posts } = await fetchPosts(token);
 
-      if (error) {
-        console.error(error);
-      }
-      setPosts(posts);
-    };
+    if (error) {
+      console.error(error);
+    }
+
+    setPosts(posts);
+  };
+
+  useEffect(() => {
     getPosts();
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     if (token) {
-      console.log(token);
-      const getGuest = async () => {
-        const { username } = await fetchGuest(token);
-        console.log("RESULT", username);
+      const getUsername = async () => {
+        const { username } = await fetchUsername(token);
         setUsername(username);
-        console.log("USERNAME", username);
       };
-      getGuest();
+      getUsername();
     }
   }, [token]);
 
@@ -61,41 +60,23 @@ const App = () => {
   return (
     <div className="container">
       <nav className="ui secondary menu">
-        <Link className="item" style={{ color: "white" }} to="/">
+        <Link className="item" to="/">
           Home
         </Link>
-        <Link className="item" style={{ color: "white" }} to="/Posts">
+        <Link className="item" to="/posts">
           Posts
-        </Link>
-        <Link className="item" style={{ color: "white" }} to="/inbox">
-          Inbox
         </Link>
         <div className="right menu">
           {token ? (
-            <button
-              style={{ color: "white" }}
-              className="ui item"
-              onClick={(event) => {
-                event.preventDefault();
-                logOut();
-              }}
-            >
+            <button onClick={logOut} className="item">
               Log Out
             </button>
           ) : (
             <>
-              <Link
-                style={{ color: "white" }}
-                className="ui item"
-                to="/AccountForm/login"
-              >
+              <Link className="item" to="/account/login">
                 Log In
               </Link>
-              <Link
-                style={{ color: "white" }}
-                className="ui item"
-                to="/AccountForm/register"
-              >
+              <Link className="item" to="/account/register">
                 Sign Up
               </Link>
             </>
@@ -106,20 +87,17 @@ const App = () => {
         <Route exact path="/">
           <Home username={username} />
         </Route>
-        <Route path="/Posts/create">
-          <PostsCreate token={token} setPosts={setPosts} />
+        <Route className="item" path="/posts/create">
+          <PostCreateForm token={token} setPosts={setPosts} />
         </Route>
-        <Route path="/Posts/:postId">
-          <PostMessage posts={posts} token={token} />
+        <Route className="item" path="/posts/:postId">
+          <PostDetail token={token} post={posts} getPosts={getPosts} />
         </Route>
-        <Route path="/Posts">
+        <Route className="item" path="/posts">
           <Posts posts={posts} token={token} setPosts={setPosts} />
         </Route>
-        <Route path="/AccountForm/:action">
+        <Route path="/account/:action">
           <AccountForm setToken={setToken} />
-        </Route>
-        <Route path="/Inbox">
-          <Inbox token={token} posts={posts} setPosts={setPosts} />
         </Route>
       </Switch>
     </div>
